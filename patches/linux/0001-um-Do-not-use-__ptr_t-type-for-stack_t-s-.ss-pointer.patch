@@ -1,0 +1,37 @@
+From cca19c4250286493e376c7efd34b4c02f8773e4d Mon Sep 17 00:00:00 2001
+From: Hans-Werner Hilse <hwhilse@gmail.com>
+Date: Tue, 9 Jun 2015 16:03:52 +0200
+Subject: [PATCH v2 1/3] um: Do not use __ptr_t type for stack_t's .ss pointer
+To: User-mode-linux-devel@lists.sourceforge.net
+
+__ptr_t type is a glibc-specific type, while the generally
+documented type is a void*. That's what other C libraries use,
+too.
+
+Signed-off-by: Hans-Werner Hilse <hwhilse@gmail.com>
+---
+ arch/um/os-Linux/signal.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/arch/um/os-Linux/signal.c b/arch/um/os-Linux/signal.c
+index 7b605e4..036d0db 100644
+--- a/arch/um/os-Linux/signal.c
++++ b/arch/um/os-Linux/signal.c
+@@ -112,9 +112,11 @@ void timer_init(void)
+ 
+ void set_sigstack(void *sig_stack, int size)
+ {
+-	stack_t stack = ((stack_t) { .ss_flags	= 0,
+-				     .ss_sp	= (__ptr_t) sig_stack,
+-				     .ss_size 	= size - sizeof(void *) });
++	stack_t stack = {
++		.ss_flags = 0,
++		.ss_sp = sig_stack,
++		.ss_size = size - sizeof(void *)
++	};
+ 
+ 	if (sigaltstack(&stack, NULL) != 0)
+ 		panic("enabling signal stack failed, errno = %d\n", errno);
+-- 
+2.4.2
+

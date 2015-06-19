@@ -1,0 +1,31 @@
+From 53622156fc7cb30730eedd42284cd8a6ab70ebaf Mon Sep 17 00:00:00 2001
+From: Hans-Werner Hilse <hwhilse@gmail.com>
+Date: Tue, 9 Jun 2015 15:48:03 +0200
+Subject: [PATCH v2 3/3] um: Include sys/types.h for makedev(), major(), minor()
+To: User-mode-linux-devel@lists.sourceforge.net
+
+The functions in question are not part of the POSIX standard,
+documentation however hints that the corresponding header shall
+be sys/types.h. C libraries other than glibc, namely musl, did
+not include that header via other ways and complained.
+
+Signed-off-by: Hans-Werner Hilse <hwhilse@gmail.com>
+---
+ arch/um/os-Linux/file.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/um/os-Linux/file.c b/arch/um/os-Linux/file.c
+index 08d90fb..26e0164 100644
+--- a/arch/um/os-Linux/file.c
++++ b/arch/um/os-Linux/file.c
+@@ -13,6 +13,7 @@
+ #include <sys/socket.h>
+ #include <sys/stat.h>
+ #include <sys/un.h>
++#include <sys/types.h>
+ #include <os.h>
+ 
+ static void copy_stat(struct uml_stat *dst, const struct stat64 *src)
+-- 
+2.4.2
+

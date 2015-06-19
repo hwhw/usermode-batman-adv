@@ -1,0 +1,19 @@
+--- linux-4.0.4/arch/x86/um/ldt.c	2015-05-17 18:55:21.000000000 +0200
++++ linux-4.0.4.bak/arch/x86/um/ldt.c	2015-06-09 19:20:08.748483644 +0200
+@@ -12,8 +12,15 @@
+ #include <skas.h>
+ #include <skas_ptrace.h>
+ #include <sysdep/tls.h>
++#include <unistd.h>
++#include <sys/syscall.h>
++
++//extern int modify_ldt(int func, void *ptr, unsigned long bytecount);
++static inline int modify_ldt (int func, void *ptr, unsigned long bytecount)
++{
++      return syscall (SYS_modify_ldt, func, ptr, bytecount);
++}
+ 
+-extern int modify_ldt(int func, void *ptr, unsigned long bytecount);
+ 
+ static long write_ldt_entry(struct mm_id *mm_idp, int func,
+ 		     struct user_desc *desc, void **addr, int done)

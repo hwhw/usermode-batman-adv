@@ -1,0 +1,19 @@
+--- u9fs/authrhosts.c	2015-06-19 18:34:47.023720450 +0200
++++ u9fs.bak/authrhosts.c	2015-05-29 20:59:32.101827312 +0200
+@@ -23,12 +23,15 @@
+ rhostsattach(Fcall *rx, Fcall *tx)
+ {
+ 	USED(tx);
+-
++	USED(rx);
++return 0;
++/*
+ 	if(ruserok(remotehostname, 0, rx->uname, rx->uname) < 0){
+ 		fprint(2, "ruserok(%s, %s) not okay\n", remotehostname, rx->uname);
+ 		return "u9fs: rhosts authentication failed";
+ 	}
+ 	return 0;
++*/
+ }
+ 
+ Auth authrhosts = {
