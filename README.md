@@ -34,7 +34,7 @@ cp linux/linux /usr/local/bin/linux-batman-v15
 and/or
 
 ```bash
-make prepare14
+make prepare-v14
 make
 cp linux/linux /usr/local/bin/linux-batman-v14
 ```
