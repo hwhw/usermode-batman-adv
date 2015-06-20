@@ -1,9 +1,9 @@
+TOP := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+ARCH=$(shell uname -m)
 GCC=musl-gcc
-CFLAGS=-Os -static
+CFLAGS=-Os -static -I${TOP}/include
 LDFLAGS=-static
 LINUX_VER=4.0.5
-
-TOP := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 all: linux/linux
 
@@ -35,8 +35,9 @@ alfred/alfred alfred/vis/batadv-vis: alfred
 linux/linux: linux linux/.config root-mini/init root-mini/sbin/u9fs root-mini/sbin/alfred root-mini/sbin/batadv-vis root-mini/sbin/socat vde/vde-2/src/lib/.libs/libvdeplug.a
 	$(MAKE) -C linux \
 			ARCH=um \
-			CC="${GCC} ${CFLAGS}" \
-			CFLAGS="-I${TOP}/vde/vde-2/include -L${TOP}/vde/vde-2/src/lib/.libs" \
+			CC="${GCC}" \
+			CFLAGS="${CFLAGS} -I${TOP}/vde/vde-2/include -L${TOP}/vde/vde-2/src/lib/.libs" \
+			LDFLAGS="${LDFLAGS}" \
 			LDFLAGS_vde.o="-r ${TOP}/vde/vde-2/src/lib/.libs/libvdeplug.a"
 
 socat/configure.ac: socat
@@ -63,11 +64,12 @@ clean:
 	$(MAKE) -C u9fs clean
 	$(MAKE) -C alfred clean
 	$(MAKE) -C socat clean
-	rm root-mini/init
-	rm root-mini/sbin/u9fs
-	rm root-mini/sbin/alfred
-	rm root-mini/sbin/batadv-vis
-	rm root-mini/sbin/socat
+	rm socat/configure || true
+	rm root-mini/init || true
+	rm root-mini/sbin/u9fs || true
+	rm root-mini/sbin/alfred || true
+	rm root-mini/sbin/batadv-vis || true
+	rm root-mini/sbin/socat || true
 
 build-vde vde/vde-2/src/lib/.libs/libvdeplug.a: vde
 	[ -f vde/vde-2/configure ] || cd vde/vde-2 && autoreconf --install
@@ -80,6 +82,12 @@ build-vde vde/vde-2/src/lib/.libs/libvdeplug.a: vde
 
 linux/.config: linux.config linux
 	cp linux.config $@
+
+kernel-headers:
+	git://github.com/sabotage-linux/kernel-headers
+
+include: kernel-headers
+	$(MAKE) -C kernel-headers ARCH="${ARCH}" prefix="${TOP}" install
 
 vde:
 	svn checkout svn://svn.code.sf.net/p/vde/svn/trunk vde
@@ -100,7 +108,10 @@ linux:
 	cd linux-${LINUX_VER} && for p in ../patches/linux/0*; do patch -p1 < $$p; done
 	ln -s linux-${LINUX_VER} linux
 
-prepare: linux vde alfred u9fs
+prepare: linux vde alfred u9fs include
 
 prepare-v14: prepare
 	cd linux && patch -p1 < ../patches/linux/linux-add-batman-legacy.patch
+
+prepare-v15: prepare
+	[ -d linux/net/batman-adv-legacy ] && cd linux && patch -p1 -R < ../patches/linux/linux-add-batman-legacy.patch
