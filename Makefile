@@ -111,7 +111,7 @@ linux:
 prepare: linux vde alfred u9fs include
 
 prepare-v14: prepare
-	cd linux && patch -p1 < ../patches/linux/linux-add-batman-legacy.patch
+	[ ! -d linux/net/batman-adv-legacy ] && cd linux && patch -p1 < ../patches/linux/linux-add-batman-legacy.patch
 
 prepare-v15: prepare
 	[ -d linux/net/batman-adv-legacy ] && cd linux && patch -p1 -R < ../patches/linux/linux-add-batman-legacy.patch
