@@ -1,0 +1,44 @@
+diff --git a/xio-ip4.c b/xio-ip4.c
+index 73d7d7a..d0ed3f9 100644
+--- a/xio-ip4.c
++++ b/xio-ip4.c
+@@ -45,9 +45,11 @@ int xioparsenetwork_ip4(const char *rangename, struct xiorange *range) {
+    } else if (delimpos = strchr(rangename1, ':')) {
+       if ((maskaddr = Gethostbyname(delimpos+1)) == NULL) {
+ 	 /* note: cast is req on AIX: */
++#ifdef NETDB_INTERNAL
+ 	 Error2("gethostbyname(\"%s\"): %s", delimpos+1,
+ 		h_errno == NETDB_INTERNAL ? strerror(errno) :
+ 		(char *)hstrerror(h_errno));
++#endif
+ 	 return STAT_NORETRY;
+       }
+       netmask_in->s_addr = *(uint32_t *)maskaddr->h_addr_list[0];
+@@ -61,9 +63,11 @@ int xioparsenetwork_ip4(const char *rangename, struct xiorange *range) {
+       *delimpos = 0;
+       if ((nameaddr = Gethostbyname(rangename1)) == NULL) {
+ 	 /* note: cast is req on AIX: */
++#ifdef NETDB_INTERNAL
+ 	 Error2("gethostbyname(\"%s\"): %s", rangename1,
+ 		h_errno == NETDB_INTERNAL ? strerror(errno) :
+ 		(char *)hstrerror(h_errno));
++#endif
+ 	    free(rangename1);
+ 	 return STAT_NORETRY;
+       }
+diff --git a/xio-proxy.c b/xio-proxy.c
+index 63582cc..d4c0b9b 100644
+--- a/xio-proxy.c
++++ b/xio-proxy.c
+@@ -245,9 +245,11 @@ int _xioopen_proxy_prepare(struct proxyvars *proxyvars, struct opt *opts,
+       if (host == NULL) {
+ 	 int level = E_WARN;
+ 	 /* note: cast is req on AIX: */
++#ifdef NETDB_INTERNAL
+ 	 Msg2(level, "gethostbyname(\"%s\"): %s", targetname,
+ 	      h_errno == NETDB_INTERNAL ? strerror(errno) :
+ 	      (char *)hstrerror(h_errno)/*0 h_messages[h_errno-1]*/);
++#endif
+ 
+ 	 proxyvars->targetaddr = strdup(targetname);
+       } else {

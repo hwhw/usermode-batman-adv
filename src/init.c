@@ -171,10 +171,6 @@ void fork_process(const char *path, char *const argv[]) {
  * configuration: helper for config items
  */
 void early_config(char *token, char *value) {
-    char *alfred_slave[] = {"alfred", "-i", "bat0", "-u", "/alfred.sock", NULL};
-    char *alfred_master[] = {"alfred", "-m", "-i", "bat0", "-u", "/alfred.sock", NULL};
-    char *batadv_vis[] = {"batadv-vis", "-i", "bat0", "-u", "/alfred.sock", "-s", NULL};
-
     if (!strcmp("service_ip", token)) {
         service_ip = strdup(value);
     } else if (!strcmp("service_netmask", token)) {
@@ -186,9 +182,11 @@ void early_config(char *token, char *value) {
     }
 }
 void late_config(char *token, char *value) {
-    char *alfred_slave[] = {"alfred", "-i", "bat0", "-u", "/alfred.sock", NULL};
-    char *alfred_master[] = {"alfred", "-i", "bat0", "-u", "/alfred.sock", "-m", NULL};
+    char *alfred_slave[] = {"alfred", "-i", "bat0br", "-u", "/alfred.sock", NULL};
+    char *alfred_master[] = {"alfred", "-i", "bat0br", "-u", "/alfred.sock", "-m", NULL};
     char *batadv_vis[] = {"batadv-vis", "-i", "bat0", "-u", "/alfred.sock", "-s", NULL};
+    char *socat_alfred[] = {"socat", NULL, "UNIX-CLIENT:/alfred.sock", NULL};
+    char socat_tcp[512];
 
     if (!strcmp("run_alfred", token)) {
         if(!strcmp("master", value)) {
@@ -197,6 +195,9 @@ void late_config(char *token, char *value) {
             fork_process("/sbin/alfred", alfred_slave);
         }
         fork_process("/sbin/batadv-vis", batadv_vis);
+        snprintf(socat_tcp, 512, "TCP-LISTEN:16962,bind=%s,reuseaddr,fork", service_ip);
+        socat_alfred[1] = socat_tcp;
+        fork_process("/sbin/socat", socat_alfred);
     } else if (token[0] == '/') {
         writestring(token, value);
     }
