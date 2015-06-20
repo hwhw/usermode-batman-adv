@@ -84,7 +84,7 @@ linux/.config: linux.config linux
 	cp linux.config $@
 
 kernel-headers:
-	git://github.com/sabotage-linux/kernel-headers
+	git clone git://github.com/sabotage-linux/kernel-headers
 
 include: kernel-headers
 	$(MAKE) -C kernel-headers ARCH="${ARCH}" prefix="${TOP}" install
