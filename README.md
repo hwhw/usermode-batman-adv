@@ -12,6 +12,8 @@ new information about this feature of the Linux kernel, it is still there, waiti
 Comes with integration of
 * A.L.F.R.E.D. (http://www.open-mesh.org/projects/alfred) and batadv-vis
   allows to publish/collect broadcast information from the Mesh network
+* socat is used to provide access to A.L.F.R.E.D.'s Unix socket interface
+  via TCP (see below)
 * u9fs (https://bitbucket.org/plan9-from-bell-labs/u9fs)
   allows access to the UML-internal file system
 
@@ -98,3 +100,9 @@ Further config flags exist for setting the address of the `bat0` device within t
 You can also configure whether to run the A.L.F.R.E.D. daemon, either in slave mode (`run_alfred=slave`) or in master mode (`run_alfred=master`).
 
 When you pass kernel parameters whose names start with a `/`, they are interpreted as file names and the value of the parameter is written to the according files within the UML instance, after setting up networking. Use the 9P file system access for more elaborate access.
+
+You can use the `alfred` tool outside the UML instance. In the needed Unix socket can be provided e.g. via socat, which will forward the socket requests via TCP into the UML instance, where another socat instance does the reverse (example uses the service_ip configured in the example above):
+```
+socat UNIX-LISTEN:/var/run/alfred.sock,fork TCP:192.168.254.2:16962 &
+alfred -r 158
+```
