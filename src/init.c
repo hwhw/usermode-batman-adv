@@ -186,7 +186,9 @@ void late_config(char *token, char *value) {
     char *alfred_master[] = {"alfred", "-i", "bat0br", "-u", "/alfred.sock", "-m", NULL};
     char *batadv_vis[] = {"batadv-vis", "-i", "bat0", "-u", "/alfred.sock", "-s", NULL};
     char *socat_alfred[] = {"socat", NULL, "UNIX-CLIENT:/alfred.sock", NULL};
-    char socat_tcp[512];
+    char socat_alfred_tcp[512];
+    char *socat_u9fs[] = {"socal", NULL, "EXEC:/sbin/u9fs -a none -l /dev/null -u root", NULL};
+    char socat_u9fs_tcp[512];
 
     if (!strcmp("run_alfred", token)) {
         if(!strcmp("master", value)) {
@@ -195,9 +197,13 @@ void late_config(char *token, char *value) {
             fork_process("/sbin/alfred", alfred_slave);
         }
         fork_process("/sbin/batadv-vis", batadv_vis);
-        snprintf(socat_tcp, 512, "TCP-LISTEN:16962,bind=%s,reuseaddr,fork", service_ip);
-        socat_alfred[1] = socat_tcp;
+        snprintf(socat_alfred_tcp, 512, "TCP-LISTEN:16962,bind=%s,reuseaddr,fork", service_ip);
+        socat_alfred[1] = socat_alfred_tcp;
         fork_process("/sbin/socat", socat_alfred);
+    } else if (!strcmp("run_u9fs", token)) {
+        snprintf(socat_u9fs_tcp, 512, "TCP-LISTEN:%d,bind=%s,reuseaddr,fork", SERVER9P_PORT, service_ip);
+        socat_u9fs[1] = socat_u9fs_tcp;
+        fork_process("/sbin/socat", socat_u9fs);
     } else if (token[0] == '/') {
         writestring(token, value);
     }
@@ -247,68 +253,6 @@ void do_config(void (*helper)(char *, char *)) {
         }
     }
     close(fd);
-}
-
-/*
- * this is a bit as if we were becoming an inetd server for a 9P daemon
- *
- * this function will listen on a port and wait for connections.
- * On connection, it is accepted and a child process is spawned to
- * handle it.
- */
-void run_9p_server() {
-    struct sockaddr_in sai;
-    int server_fd;
-    int conn_fd;
-    pid_t child;
-    int reuse_addr = 1;
-
-    memset(&sai, 0, sizeof(struct sockaddr));
-    sai.sin_family = AF_INET;
-    sai.sin_port = htons(SERVER9P_PORT);
-    sai.sin_addr.s_addr = inet_addr(service_ip);
-
-    server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (server_fd == -1)
-        ERROR("cannot open server socket: %s (%d)\n", strerror(errno), errno);
-
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)) == -1)
-        ERROR("cannot set server socket flags: %s (%d)\n", strerror(errno), errno);
-
-    if (bind(server_fd, (struct sockaddr *) &sai, sizeof(struct sockaddr_in)) == -1)
-        ERROR("cannot bind server socket: %s (%d)\n", strerror(errno), errno);
-
-    if (listen(server_fd, SOMAXCONN))
-        ERROR("cannot listen on server socket: %s (%d)\n", strerror(errno), errno);
-
-    signal(SIGCHLD, SIG_IGN);
-
-    while (1) {
-        conn_fd = accept(server_fd, 0, 0);
-        if(conn_fd == -1) {
-            if(errno == EINTR) continue;
-            ERROR("server error accepting connection: %s (%d)\n", strerror(errno), errno);
-        }
-        child = fork();
-        if(child == -1) {
-            ERROR("server error forking for connection: %s (%d)\n", strerror(errno), errno);
-        } else if(child == 0) {
-            close(server_fd);
-            close(0);
-            close(1);
-            if(dup2(conn_fd, 0) != -1 && dup2(conn_fd, 1) != -1) {
-                execl(
-                    "/sbin/u9fs", "u9fs",
-                    "-a", "none",
-                    "-l", "/dev/null",
-                    "-u", "root",
-                    (char  *) NULL);
-            }
-            ERROR("server error when starting child process: %s (%d)\n", strerror(errno), errno);
-        } else {
-            close(conn_fd);
-        }
-    }
 }
 
 #define TPL_MESH_IFACE "/sys/class/net/%s/batman_adv/mesh_iface"
@@ -392,6 +336,5 @@ int main(int argc, char* argv[]) {
 
     close(sockfd);
 
-    run_9p_server();
-    ERROR("what am I doing here? %d / %d / %s\n", n, errno, strerror(errno));
+    while(1) sleep(24*60*60);
 }

@@ -82,6 +82,7 @@ TEMP=/tmp start-stop-daemon -b -c nobody:nogroup --start \
                 bat0_hwaddr=ca:fe:fe:fe:03:f0 \
                 service_ip=192.168.254.2 \
                 run_alfred=slave \
+                run_u9fs \
                 /sys/class/net/bat0/mesh/gw_mode=server \
                 /sys/class/net/bat0/mesh/gw_bandwidth=1024MBit/1024MBit
 
@@ -98,6 +99,8 @@ It also sets up a bunch of further interfaces, starting at `eth2`. All these int
 Further config flags exist for setting the address of the `bat0` device within the UML instance and the MTU of the available interfaces within the UML instance.
 
 You can also configure whether to run the A.L.F.R.E.D. daemon, either in slave mode (`run_alfred=slave`) or in master mode (`run_alfred=master`).
+
+If you do not specify `run_u9fs` or `run_alfred`, the corresponding daemons are not run at all.
 
 When you pass kernel parameters whose names start with a `/`, they are interpreted as file names and the value of the parameter is written to the according files within the UML instance, after setting up networking. Use the 9P file system access for more elaborate access.
 
