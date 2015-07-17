@@ -1,0 +1,35 @@
+diff -ru batctl-2013.4.0/ioctl.c batctl-2013.4.0.N/ioctl.c
+--- batctl-2013.4.0/ioctl.c	2013-10-13 23:43:09.000000000 +0200
++++ batctl-2013.4.0.N/ioctl.c	2015-07-17 10:12:09.086535791 +0200
+@@ -27,6 +27,7 @@
+ #include <unistd.h>
+ #include <sys/ioctl.h>
+ #include <sys/socket.h>
++#include <sys/types.h>
+ #include <linux/if.h>
+ #include <linux/sockios.h>
+ #include <linux/ethtool.h>
+diff -ru batctl-2013.4.0/packet.h batctl-2013.4.0.N/packet.h
+--- batctl-2013.4.0/packet.h	2013-10-13 23:43:09.000000000 +0200
++++ batctl-2013.4.0.N/packet.h	2015-07-17 10:11:35.083203305 +0200
+@@ -20,6 +20,8 @@
+ #ifndef _NET_BATMAN_ADV_PACKET_H_
+ #define _NET_BATMAN_ADV_PACKET_H_
+ 
++#include "linux/types.h"
++
+ enum batadv_packettype {
+ 	BATADV_IV_OGM		= 0x01,
+ 	BATADV_ICMP		= 0x02,
+diff -ru batctl-2013.4.0/tcpdump.c batctl-2013.4.0.N/tcpdump.c
+--- batctl-2013.4.0/tcpdump.c	2013-10-13 23:43:09.000000000 +0200
++++ batctl-2013.4.0.N/tcpdump.c	2015-07-17 10:11:53.129869522 +0200
+@@ -19,6 +19,8 @@
+  *
+  */
+ 
++#define _GNU_SOURCE
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>

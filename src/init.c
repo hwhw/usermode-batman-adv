@@ -22,6 +22,9 @@
 /* listen on this port for 9P filesystem client connections */
 #define SERVER9P_PORT 564
 
+/* listen on this port for batctl requests */
+#define SERVERBATCTL_PORT 12000
+
 int sockfd;
 char* service_ip = NULL;
 char* service_netmask = NULL;
@@ -187,8 +190,10 @@ void late_config(char *token, char *value) {
     char *batadv_vis[] = {"batadv-vis", "-i", "bat0", "-u", "/alfred.sock", "-s", NULL};
     char *socat_alfred[] = {"socat", NULL, "UNIX-CLIENT:/alfred.sock", NULL};
     char socat_alfred_tcp[512];
-    char *socat_u9fs[] = {"socal", NULL, "EXEC:/sbin/u9fs -a none -l /dev/null -u root", NULL};
+    char *socat_u9fs[] = {"socat", NULL, "EXEC:/sbin/u9fs -a none -l /dev/null -u root", NULL};
     char socat_u9fs_tcp[512];
+    char *socat_batctl[] = {"socat", NULL, "EXEC:/sbin/batctl,stderr,sigint,sighup,sigquit", NULL};
+    char socat_batctl_tcp[512];
 
     if (!strcmp("run_alfred", token)) {
         if(!strcmp("master", value)) {
@@ -204,6 +209,10 @@ void late_config(char *token, char *value) {
         snprintf(socat_u9fs_tcp, 512, "TCP-LISTEN:%d,bind=%s,reuseaddr,fork", SERVER9P_PORT, service_ip);
         socat_u9fs[1] = socat_u9fs_tcp;
         fork_process("/sbin/socat", socat_u9fs);
+    } else if (!strcmp("run_batctl_wrapper", token)) {
+        snprintf(socat_batctl_tcp, 512, "TCP-LISTEN:%d,bind=%s,reuseaddr,fork", SERVERBATCTL_PORT, service_ip);
+        socat_batctl[1] = socat_batctl_tcp;
+        fork_process("/sbin/socat", socat_batctl);
     } else if (token[0] == '/') {
         writestring(token, value);
     }

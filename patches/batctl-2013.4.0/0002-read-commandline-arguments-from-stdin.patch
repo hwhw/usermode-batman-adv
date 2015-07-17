@@ -1,0 +1,47 @@
+diff --git a/main.c b/main.c
+index 7d667d3..bf7d142 100644
+--- a/main.c
++++ b/main.c
+@@ -92,7 +92,7 @@ void print_usage(void)
+ #endif
+ }
+ 
+-int main(int argc, char **argv)
++int omain(int argc, char **argv)
+ {
+ 	int i, ret = EXIT_FAILURE;
+ 	char *mesh_iface = mesh_dfl_iface;
+@@ -219,3 +219,33 @@ err:
+ 	print_usage();
+ 	exit(EXIT_FAILURE);
+ }
++
++int main(int argc, char **argv)
++{
++    static char args[1024];
++    static char *rargv[100];
++    int c = 0;
++    int ch;
++
++    rargv[0] = args;
++    argc = 0;
++
++    while(!feof(stdin) && c < 1024) {
++        ch = fgetc(stdin);
++        if(ch == EOF) {
++            break;
++        }
++        args[c] = ch;
++        if(ch == 0) {
++            if(c > 1 && args[c-1] == '\0') {
++                break;
++            }
++            argc++;
++            rargv[argc] = &args[c+1];
++        }
++        c++;
++    }
++    rargv[argc] = NULL;
++    argv = rargv;
++    return omain(argc, argv);
++}
