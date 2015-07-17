@@ -1,0 +1,9 @@
+#!/bin/bash
+(
+    echo -ne "$0\0"
+    while (( "$#" )); do
+        echo -ne "$1\0"
+        shift
+    done
+    echo -ne "\0"
+) | socat - TCP:${BATCTL_HOST?=192.168.0.2}:12000
